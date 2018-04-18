@@ -16,6 +16,7 @@ our $HRULE_FIELD_RIGHT = '-+';
 our $FIELD_LEFT  = '| ';
 our $FIELD_RIGHT = ' |';
 
+# set the configuration for a new table
 sub new {
 	my $class = shift;
 	my $self = shift;
@@ -24,12 +25,13 @@ sub new {
 
 }
 
+# render the table into a string
 sub render {
 	my $self = shift;
 
 	my $str;
 
-	$str .= $self->_title() . $self->_header();
+	$str .= $self->_title() . "\n" . $self->_header();
 
 	for my $i (0 .. $#_) {
 		$str .= $self->_row(@{$_[$i]});
@@ -37,11 +39,13 @@ sub render {
 	return $str;
 }
 
+# get the title for the table
 sub _title {
 	my $self = shift;
 	return $self->{title};
 }
 
+# render the column name fields into a string of columns
 sub _header {
 	my $self = shift;
 
@@ -53,6 +57,7 @@ sub _header {
 	return $self->_row(@fields);
 }
 
+# render a horizontal rule that fits the table column field widths
 sub _hrule {
 	my $self = shift;
 	my $str;
@@ -65,6 +70,8 @@ sub _hrule {
 	return $str . "\n";
 }
 
+# render a row of table field data, word wrapping each field with a horizontal
+# rule delmiting the end as a string
 sub _row {
 	my $self = shift;
 	my @fields = @_;
@@ -99,27 +106,33 @@ use constant {
 	_ALIGN_LEFT  => '-',
 };
 
+# render a string aligned to a specified alignment constrained by width
 sub _align {
 	my ($str, $width, $align) = @_;
 	return sprintf "%$align*s", $width, $str;
 }
 
+# render a string left-aligned
 sub _left {
 	my ($str, $width) = @_;
 	return _align $str, $width, _ALIGN_LEFT;
 }
 
+# render a string right-aligned
 sub _right {
 	my ($str, $width) = @_;
 	return _align $str, $width, _ALIGN_RIGHT;
 }
 
+# render a string center-aligned
 sub _center {
 	my ($str, $width) = @_;
 
+	# calculate the padding width for the left and right
 	my $lw = ($width - length($str)) / 2;
 	my $rw = int $lw;
 
+	# if the width aligns to the middle of a glyph (.5) shift it by 1
 	if ($lw - int $lw) {
 		$rw += 1;
 	}
@@ -127,6 +140,8 @@ sub _center {
 	return ' ' x $lw . $str . ' ' x $rw;
 }
 
+# word wrap a list of arguments to a specified width, returns a list of list
+# references where each list reference element is a row that has been wrapped
 sub _wrap {
 	my $len = shift;
 	my $n = 0;
@@ -162,3 +177,58 @@ sub _wrap {
 }
 
 1;
+
+=head1 NAME
+
+Table.pm
+
+=head1 SYNOPSIS
+
+	my $table = Table->new({
+		title   => 'some title for my table!',
+		columns => [
+			{ title => 'Column A', width => 15, align => Table::LEFT   },
+			{ title => 'Column B', width => 20, align => Table::CENTER },
+			{ title => 'Column C', width => 32, align => Table::RIGHT  },
+		],
+	});
+
+	# ...
+
+	$table->render(['a' x 32, 'b' x 56, 'c' x 43], ['a' x 20, 'b' x 26, 'c' x 38]);
+
+
+=head1 DESCRIPTION
+
+Renders ascii tables to a specified format.
+
+Columns fields are word wrapped within the column they are specified for.
+
+=head1 EXAMPLE
+
+	my $table = Table->new({
+		title   => 'some title for my table!',
+		columns => [
+			{ title => 'Column A', width => 15, align => Table::LEFT   },
+			{ title => 'Column B', width => 20, align => Table::CENTER },
+			{ title => 'Column C', width => 32, align => Table::RIGHT  },
+		],
+	});
+
+	# ...
+
+	$table->render(['a' x 32, 'b' x 56, 'c' x 43], ['a' x 20, 'b' x 26, 'c' x 38]);
+
+Outputs:
+
+	some title for my table!
+	| Column A        ||       Column B       ||                         Column C |
+	+-----------------++----------------------++----------------------------------+
+	| aaaaaaaaaaaaaaa || bbbbbbbbbbbbbbbbbbbb || cccccccccccccccccccccccccccccccc |
+	| aaaaaaaaaaaaaaa || bbbbbbbbbbbbbbbbbbbb ||                      ccccccccccc |
+	| aa              ||   bbbbbbbbbbbbbbbb   ||                                  |
+	+-----------------++----------------------++----------------------------------+
+	| aaaaaaaaaaaaaaa || bbbbbbbbbbbbbbbbbbbb || cccccccccccccccccccccccccccccccc |
+	| aaaaa           ||        bbbbbb        ||                           cccccc |
+	+-----------------++----------------------++----------------------------------+
+
